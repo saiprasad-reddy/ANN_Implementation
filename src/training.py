@@ -1,9 +1,11 @@
+from genericpath import exists
 from src.utils.common import read_config
 from src.utils.data_mgmt import get_data
-import sys
+from src.utils.model import create_model, save_model
+from src.utils.callbacks import get_callbacks
+import os
 
 from src.utils.model import create_model
-sys.path.append('src/training.py')
 import argparse
 
 def training(config_path):
@@ -17,7 +19,20 @@ def training(config_path):
     model = create_model(LOSS_FUNCTION, OPTIMIZER, METRICS, NUM_CLASSES)
     EPOCHS = config['params']['epochs']
     VALIDATION = (X_valid, y_valid)
+    
+
+    CALLBACK_LIST = get_callbacks(config, X_train)
+
     history = model.fit(X_train, y_train, epochs=EPOCHS, validation_data=VALIDATION)
+
+    artifacts_dir = config['artifacts']['artifacts_dir']
+    model_dir =  config['artifacts']['model_dir']
+    model_dir_path = os.path.join(artifacts_dir, model_dir)
+    os.makedirs(model_dir_path, exist_ok=True )
+    model_name =  config['artifacts']['model_name']
+    
+    save_model(model, model_name, model_dir)
+
 
 
 if __name__ == '__main__':
@@ -27,5 +42,5 @@ if __name__ == '__main__':
 
     parsed_args = args.parse_args()
 
-    training(config_path=parsed_args())
+    training(config_path=parsed_args.config)
 
